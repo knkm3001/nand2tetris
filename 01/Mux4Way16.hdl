@@ -1,0 +1,112 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux4Way16.hdl
+
+/**
+ * 4-way 16-bit multiplexor:
+ * out = a if sel == 00
+ *       b if sel == 01
+ *       c if sel == 10
+ *       d if sel == 11
+ */
+
+CHIP Mux4Way16 {
+    IN a[16], b[16], c[16], d[16], sel[2];
+    OUT out[16];
+
+    PARTS:
+    // out = Mux(Mux(a,b,sel[0]),Mux(c,d,sel[0]),sel[1]);
+
+    Mux16(a=a,b=b,sel=sel[0],out=q); 
+   	Mux16(a=c,b=d,sel=sel[0],out=r);
+    Mux16(a=q,b=r,sel=sel[1],out=out);
+
+    /*
+    //これでもできるけど実装が地獄
+
+    // out 0
+    Mux(a=a[0],b=b[0],sel=sel[0],out=TmpMuxrslt-00);
+    Mux(a=c[0],b=d[0],sel=sel[0],out=TmpMuxrslt-01);
+    Mux(a=TmpMuxrslt-00,b=TmpMuxrslt-01,sel=sel[1],out=out[0]);
+
+
+    // out 1
+    Mux(a=a[1],b=b[1],sel=sel[0],out=TmpMuxrslt-10);
+    Mux(a=c[1],b=d[1],sel=sel[0],out=TmpMuxrslt-11);
+    Mux(a=TmpMuxrslt-10,b=TmpMuxrslt-11,sel=sel[1],out=out[1]);
+    
+
+    // out 2
+    Mux(a=a[2],b=b[2],sel=sel[0],out=TmpMuxrslt-20);
+    Mux(a=c[2],b=d[2],sel=sel[0],out=TmpMuxrslt-21);
+    Mux(a=TmpMuxrslt-20,b=TmpMuxrslt-21,sel=sel[1],out=out[2]);
+    
+    // out 3
+    Mux(a=a[3],b=b[3],sel=sel[0],out=TmpMuxrslt-30);
+    Mux(a=c[3],b=d[3],sel=sel[0],out=TmpMuxrslt-31);
+    Mux(a=TmpMuxrslt-30,b=TmpMuxrslt-31,sel=sel[1],out=out[3]);
+    
+    // out 4
+    Mux(a=a[4],b=b[4],sel=sel[0],out=TmpMuxrslt-40);
+    Mux(a=c[4],b=d[4],sel=sel[0],out=TmpMuxrslt-41);
+    Mux(a=TmpMuxrslt-40,b=TmpMuxrslt-41,sel=sel[1],out=out[4]);
+    
+    // out 5
+    Mux(a=a[5],b=b[5],sel=sel[0],out=TmpMuxrslt-50);
+    Mux(a=c[5],b=d[5],sel=sel[0],out=TmpMuxrslt-51);
+    Mux(a=TmpMuxrslt-50,b=TmpMuxrslt-51,sel=sel[1],out=out[5]);
+    
+    // out 6
+    Mux(a=a[6],b=b[6],sel=sel[0],out=TmpMuxrslt-60);
+    Mux(a=c[6],b=d[6],sel=sel[0],out=TmpMuxrslt-61);
+    Mux(a=TmpMuxrslt-60,b=TmpMuxrslt-61,sel=sel[1],out=out[6]);
+    
+    // out 7
+    Mux(a=a[7],b=b[7],sel=sel[0],out=TmpMuxrslt-70);
+    Mux(a=c[7],b=d[7],sel=sel[0],out=TmpMuxrslt-71);
+    Mux(a=TmpMuxrslt-70,b=TmpMuxrslt-71,sel=sel[1],out=out[7]);
+    
+    // out 8
+    Mux(a=a[8],b=b[8],sel=sel[0],out=TmpMuxrslt-80);
+    Mux(a=c[8],b=d[8],sel=sel[0],out=TmpMuxrslt-81);
+    Mux(a=TmpMuxrslt-80,b=TmpMuxrslt-81,sel=sel[1],out=out[8]);
+    
+    // out 9
+    Mux(a=a[9],b=b[9],sel=sel[0],out=TmpMuxrslt-90);
+    Mux(a=c[9],b=d[9],sel=sel[0],out=TmpMuxrslt-91);
+    Mux(a=TmpMuxrslt-90,b=TmpMuxrslt-91,sel=sel[1],out=out[9]);
+
+    // out 10
+    Mux(a=a[10],b=b[10],sel=sel[0],out=TmpMuxrslt-100);
+    Mux(a=c[10],b=d[10],sel=sel[0],out=TmpMuxrslt-101);
+    Mux(a=TmpMuxrslt-100,b=TmpMuxrslt-101,sel=sel[1],out=out[10]);
+
+    // out 11
+    Mux(a=a[11],b=b[11],sel=sel[0],out=TmpMuxrslt-110);
+    Mux(a=c[11],b=d[11],sel=sel[0],out=TmpMuxrslt-111);
+    Mux(a=TmpMuxrslt-110,b=TmpMuxrslt-111,sel=sel[1],out=out[11]);
+    
+    // out 12
+    Mux(a=a[12],b=b[12],sel=sel[0],out=TmpMuxrslt-120);
+    Mux(a=c[12],b=d[12],sel=sel[0],out=TmpMuxrslt-121);
+    Mux(a=TmpMuxrslt-120,b=TmpMuxrslt-121,sel=sel[1],out=out[12]);
+    
+    // out 13
+    Mux(a=a[13],b=b[13],sel=sel[0],out=TmpMuxrslt-130);
+    Mux(a=c[13],b=d[13],sel=sel[0],out=TmpMuxrslt-131);
+    Mux(a=TmpMuxrslt-130,b=TmpMuxrslt-131,sel=sel[1],out=out[13]);
+    
+    // out 14
+    Mux(a=a[14],b=b[14],sel=sel[0],out=TmpMuxrslt-140);
+    Mux(a=c[14],b=d[14],sel=sel[0],out=TmpMuxrslt-141);
+    Mux(a=TmpMuxrslt-140,b=TmpMuxrslt-141,sel=sel[1],out=out[14]);
+    
+    // out 15
+    Mux(a=a[15],b=b[15],sel=sel[0],out=TmpMuxrslt-150);
+    Mux(a=c[15],b=d[15],sel=sel[0],out=TmpMuxrslt-151);
+    Mux(a=TmpMuxrslt-150,b=TmpMuxrslt-151,sel=sel[1],out=out[15]);
+
+    */
+
+}

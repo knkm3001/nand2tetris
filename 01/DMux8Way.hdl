@@ -1,0 +1,43 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/DMux8Way.hdl
+
+/**
+ * 8-way demultiplexor:
+ * {a, b, c, d, e, f, g, h} = {in, 0, 0, 0, 0, 0, 0, 0} if sel == 000
+ *                            {0, in, 0, 0, 0, 0, 0, 0} if sel == 001
+ *                            etc.
+ *                            {0, 0, 0, 0, 0, 0, 0, in} if sel == 111
+ */
+
+CHIP DMux8Way {
+    IN in, sel[3];
+    OUT a, b, c, d, e, f, g, h;
+
+    PARTS:
+    // LSBからビット列を決めていく
+
+    // sel[0]で分類 p:**0 ,q:**1
+    DMux(in=in,sel=sel[0],a=p,b=q);
+    
+    // pからsel[1]で分類 r:*00,s:*10
+    DMux(in=p,sel=sel[1],a=r,b=s);
+
+    // qからsel[1]で分類 t:*01,u:*11
+    DMux(in=q,sel=sel[1],a=t,b=u);
+
+    // rからsel[2]で分類 a:000,e:100 
+    DMux(in=r,sel=sel[2],a=a,b=e);
+
+    // sからsel[2]で分類 c:010,g:110
+    DMux(in=s,sel=sel[2],a=c,b=g);
+
+    // tからsel[2]で分類 b:001,f:101
+    DMux(in=t,sel=sel[2],a=b,b=f);
+
+    // uからsel[2]で分類 d:011,h:111
+    DMux(in=u,sel=sel[2],a=d,b=h);
+
+
+}

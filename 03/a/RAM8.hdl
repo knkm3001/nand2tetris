@@ -1,0 +1,62 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM8.hdl
+
+/**
+ * Memory of 8 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    DMux8Way(in=load,sel=address,a=addrss0,b=addrss1,c=addrss2,d=addrss3,e=addrss4,f=addrss5,g=addrss6,h=addrss7);
+    Register(in=in,load=addrss0,out=out0);
+    Register(in=in,load=addrss1,out=out1);
+    Register(in=in,load=addrss2,out=out2);
+    Register(in=in,load=addrss3,out=out3);
+    Register(in=in,load=addrss4,out=out4);
+    Register(in=in,load=addrss5,out=out5);
+    Register(in=in,load=addrss6,out=out6);
+    Register(in=in,load=addrss7,out=out7);
+    Mux8Way16(a=out0,b=out1,c=out2,d=out3,e=out4,f=out5,g=out6,h=out7,sel=address,out=out);
+
+
+    /*
+    //これでもできるけど、冗長
+    DMux8Way(in=true,sel=address,a=addrss0,b=addrss1,c=addrss2,d=addrss3,e=addrss4,f=addrss5,g=addrss6,h=addrss7);
+    
+    Mux16(a=exout0,b=in,sel=addrss0,out=tmpout0);
+    Register(in=tmpout0,load=load,out=out0,out=exout0);
+
+    Mux16(a=exout1,b=in,sel=addrss1,out=tmpout1);
+    Register(in=tmpout1,load=load,out=out1,out=exout1);
+
+    Mux16(a=exout2,b=in,sel=addrss2,out=tmpout2);
+    Register(in=tmpout2,load=load,out=out2,out=exout2);
+
+    Mux16(a=exout3,b=in,sel=addrss3,out=tmpout3);
+    Register(in=tmpout3,load=load,out=out3,out=exout3);
+
+    Mux16(a=exout4,b=in,sel=addrss4,out=tmpout4);
+    Register(in=tmpout4,load=load,out=out4,out=exout4);
+
+    Mux16(a=exout5,b=in,sel=addrss5,out=tmpout5);
+    Register(in=tmpout5,load=load,out=out5,out=exout5);
+    
+    Mux16(a=exout6,b=in,sel=addrss6,out=tmpout6);
+    Register(in=tmpout6,load=load,out=out6,out=exout6);
+
+    Mux16(a=exout7,b=in,sel=addrss7,out=tmpout7);
+    Register(in=tmpout7,load=load,out=out7,out=exout7);
+
+    Mux8Way16(a=out0,b=out1,c=out2,d=out3,e=out4,f=out5,g=out6,h=out7,sel=address,out=out);
+    */
+    
+}

@@ -1,0 +1,98 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Central Processing unit (CPU).
+ * Consists of an ALU and a set of registers, designed to fetch and 
+ * execute instructions written in the Hack machine language.
+ * In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM=0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time unit. If reset=1 then the 
+ * CPU jumps to address 0 (i.e. sets pc=0 in next time unit) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],      // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset=1) or continue executing
+                         // the current program (reset=0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write into M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+    //// Aレジスタ入力...i==0 ? const(A命令) : out(前回のALU結果) 
+    Mux16(a=instruction,b=exout,sel=instruction[15],out=regAIn);
+    
+    
+    // Aレジスタ更新...d1==1 ? update regA : pass
+    Register(in=regAIn,load=instruction[5],out=regAOut,out=addressM);
+    
+    // パラメータY...a==0 ? regAOut : M[A]
+    Mux16(a=regAOut,b=inM[16],sel=instruction[12],out=paramY);
+    
+    // パラメータX(Dレジスタ)
+    Register(in=true,load=false,out=paramX);
+    
+    // ALU
+    ALU(x=paramX,
+        y=paramY,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+        f=instruction[7],
+        no=instruction[6],
+        out=exout,
+        
+        zr=isZero,
+        ng=isLowerThan0
+        );
+    
+    // Dレジスタ更新
+    Register(in=out,load=instruction[4],out=tmp);
+    
+    // isWriteM
+    DMux(a=true,b=false,sel=instruction[3],out=writeM);
+    
+    // プログラムカウンタ更新
+    
+    // Or(j1,j2,j3)=0 ... jumpしない
+    Or(a=instruction[2],b=instruction[1],out=tmpo);
+    Or(a=tmpo,b=instruction[0],out=isNotNull);
+    
+    // if j1==1 and ng==1...out<0 OK
+    And(a=instruction[2],b=ng,out=j1rslt);
+    // if j2==1 and zr==1...out=0 OK
+    And(a=instruction[1],b=zr,out=j2rslt);
+    
+    or(a=j1rslt,b=j2rslt,out=j1j2rslt);
+    
+    // j1,j2どちらかクリア and j1~3でnullじゃない
+    And(a=j1j2rslt,b=isNotNull,out=isJump);
+    
+    
+    PC(in=regAOut,load=isJump,inc=!isNotNull,reset=reset,out=pc);
+
+
+
+}

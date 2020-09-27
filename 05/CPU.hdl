@@ -40,59 +40,64 @@ CHIP CPU {
 
     PARTS:
 
-    //// Aレジスタ入力...i==0 ? const(A命令) : out(前回のALU結果) 
-    Mux16(a=instruction,b=exout,sel=instruction[15],out=regAIn);
-    
-    
-    // Aレジスタ更新...d1==1 ? update regA : pass
-    Register(in=regAIn,load=instruction[5],out=regAOut,out=addressM);
-    
-    // パラメータY...a==0 ? regAOut : M[A]
-    Mux16(a=regAOut,b=inM[16],sel=instruction[12],out=paramY);
-    
-    // パラメータX(Dレジスタ)
-    Register(in=true,load=false,out=paramX);
-    
-    // ALU
-    ALU(x=paramX,
-        y=paramY,
+    // 参考: http://people.duke.edu/~nts9/logicgates/CPU.hdl
+
+    // !i=1..A命令,0...D命令
+    // Aレジスタ入力 !i==1 ? out(前回のALU結果) : const(A命令) 
+	Not(in=instruction[15],out=ni);
+	Mux16(a=exOutM,b=instruction,sel=ni,out=ARegIn); 
+
+    // Aレジスタ更新 updateAReg...ni==1 or d1==1 ? update ARegister : pass
+	Or(a=ni,b=instruction[5],out=updateAReg); 
+	ARegister(in=ARegIn,load=updateAReg,out=ARegOut,out[0..14]=addressM);
+
+    // パラメータY AM...i==0 and a==0 ? A : M[A]
+	And(a=instruction[15],b=instruction[12],out=AorM);
+	Mux16(a=ARegOut,b=inM,sel=AorM,out=AM);
+	
+	ALU(x=D,
+        y=AM,
         zx=instruction[11],
         nx=instruction[10],
         zy=instruction[9],
         ny=instruction[8],
         f=instruction[7],
         no=instruction[6],
-        out=exout,
-        
-        zr=isZero,
-        ng=isLowerThan0
-        );
-    
-    // Dレジスタ更新
-    Register(in=out,load=instruction[4],out=tmp);
-    
-    // isWriteM
-    DMux(a=true,b=false,sel=instruction[3],out=writeM);
-    
-    // プログラムカウンタ更新
-    
-    // Or(j1,j2,j3)=0 ... jumpしない
-    Or(a=instruction[2],b=instruction[1],out=tmpo);
-    Or(a=tmpo,b=instruction[0],out=isNotNull);
-    
-    // if j1==1 and ng==1...out<0 OK
-    And(a=instruction[2],b=ng,out=j1rslt);
-    // if j2==1 and zr==1...out=0 OK
-    And(a=instruction[1],b=zr,out=j2rslt);
-    
-    or(a=j1rslt,b=j2rslt,out=j1j2rslt);
-    
-    // j1,j2どちらかクリア and j1~3でnullじゃない
-    And(a=j1j2rslt,b=isNotNull,out=isJump);
-    
-    
-    PC(in=regAOut,load=isJump,inc=!isNotNull,reset=reset,out=pc);
+        out=exOutM,
+        out=outM,
+        zr=zr,
+        ng=ng
+    );
 
+    // Dレジスタ更新? i==1(D命令) and d2==1(DReg) ? update DReg : pass
+	And(a=instruction[15],b=instruction[4],out=intoD);
+	DRegister(in=exOutM,load=intoD,out=D);
 
+    // Mem更新? i==1(D命令) and d3==1(Mem) ? update Mem : pass
+	And(a=instruction[15],b=instruction[3],out=writeM);
+
+    // ジャンプ
+	Not(in=ng,out=pos); 
+	Not(in=zr,out=nzr);
+	And(a=instruction[15],b=instruction[0],out=jgt); // out>0(JGT)
+	And(a=pos,b=nzr,out=posnzr); // posnzr==1 つまり out>0 
+	And(a=jgt,b=posnzr,out=ld1); // ld1 ? 1(out>0を満たす) : 0
+
+	And(a=instruction[15],b=instruction[1],out=jeq); // out==0(JEQ)
+	And(a=jeq,b=zr,out=ld2); // ld2 ? 1(out==0を満たす) : 0
+
+	And(a=instruction[15],b=instruction[2],out=jlt); // out<0(JLT)
+	And(a=jlt,b=ng,out=ld3); // ld3 ? 1(out<0を満たす) : 0
+
+    // or(ld1,ld2,ld3)==1 ? jump:not jump
+	Or(a=ld1,b=ld2,out=loadtmp);
+	Or(a=ld3,b=loadtmp,out=load);
+
+    PC(in=ARegOut,load=load,inc=true,reset=reset,out[0..14]=pc);
 
 }
+
+
+
+
+
